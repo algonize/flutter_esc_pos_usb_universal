@@ -38,7 +38,8 @@ enum PosPrintResult {
 /// How the bytes reach a printer.
 enum UsbPrinterKind {
   /// A USB printer written to directly: Windows `usbprint.sys`, Linux
-  /// `/dev/usb/lp*`, macOS IOKit or WebUSB. No printer driver needed.
+  /// `/dev/usb/lp*`, macOS IOKit, Android USB host or WebUSB. No printer
+  /// driver needed.
   device,
 
   /// A printer installed in the operating system (a Windows printer or a CUPS
@@ -61,6 +62,9 @@ enum UsbPrinterRoute {
 
   /// macOS app, straight to the USB device through IOKit.
   macosDevice,
+
+  /// Android app, straight to the USB device through Android's USB host API.
+  androidDevice,
 
   /// Browser, straight to the USB device through WebUSB.
   webUsb,

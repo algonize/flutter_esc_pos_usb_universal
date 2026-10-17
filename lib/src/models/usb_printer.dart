@@ -17,6 +17,7 @@ import '../enums.dart';
 /// | `win-queue:<printer name>` | Windows, an installed printer |
 /// | `linux-usb:<vid>:<pid>:sn=<serial>` or `…:port=<usb port>` | Linux, `/dev/usb/lp*` |
 /// | `mac-usb:<vid>:<pid>:sn=<serial>` or `…:loc=<location id>` | macOS, IOKit |
+/// | `android-usb:<vid>:<pid>:sn=<serial>` or `…:dev=<device name>` | Android, USB host |
 /// | `webusb:<vid>:<pid>:sn=<serial>` or `…:#<n>` | Browser, WebUSB |
 /// | `bridge:<bridge id>` | Browser, the Local TCP bridge |
 ///
@@ -227,6 +228,7 @@ UsbPrinterRoute routeOf(String id) {
     'win-queue' => UsbPrinterRoute.windowsQueue,
     'linux-usb' => UsbPrinterRoute.linuxDevice,
     'mac-usb' => UsbPrinterRoute.macosDevice,
+    'android-usb' => UsbPrinterRoute.androidDevice,
     'webusb' => UsbPrinterRoute.webUsb,
     'bridge' => UsbPrinterRoute.bridge,
     _ => UsbPrinterRoute.unknown,

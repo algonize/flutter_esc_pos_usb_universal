@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Matches any USB printer-class (07) device or interface. With this filter
+     Android offers to open the app when a printer is plugged in, and "Always
+     open" keeps the app's permission for that printer. -->
+<resources>
+    <usb-device class="7" />
+</resources>

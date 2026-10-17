@@ -20,7 +20,8 @@ import 'raster/widget_raster.dart';
 import 'transport/printer_transport.dart';
 
 /// Finds, connects to and prints on ESC/POS USB printers, with the same code
-/// on Windows, macOS, Linux and in Chromium browsers. No printer driver needed.
+/// on Android, Windows, macOS, Linux and in Chromium browsers. No printer
+/// driver needed.
 ///
 /// ```dart
 /// final manager = PrinterUsbManager();
@@ -36,8 +37,11 @@ import 'transport/printer_transport.dart';
 ///   `com.apple.security.device.usb` entitlement.
 /// - **Linux:** straight to `/dev/usb/lp*`. The user needs write access (the
 ///   `lp` group).
-/// - **Web (Chrome, Edge):** WebUSB on macOS and ChromeOS; the Local TCP
-///   extension and bridge on Windows and Linux.
+/// - **Android:** straight to the device through Android's USB host API. Android
+///   asks the user once per printer; [connect] asks when needed.
+/// - **Web (Chrome, Edge):** WebUSB on macOS, ChromeOS and Android; the Local
+///   TCP extension and bridge on Windows and Linux.
+/// - **iOS:** not supported; iOS lets apps use only MFi accessories.
 class PrinterUsbManager implements BasePrinterUsbManager {
   PrinterUsbManager({
     UsbPrinter? printer,

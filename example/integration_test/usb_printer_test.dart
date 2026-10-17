@@ -14,7 +14,9 @@ void main() {
     final manager = PrinterUsbManager();
     final printers = await manager.listPrinters();
     for (final p in printers) {
-      debugPrint('printer: $p ${p.category.name} ${p.commandSet ?? ''} busy=${p.isBusy}');
+      debugPrint(
+        'printer: $p ${p.category.name} ${p.commandSet ?? ''} busy=${p.isBusy}',
+      );
     }
     for (final n in manager.notes) {
       debugPrint('note: $n');

@@ -16,12 +16,12 @@ class UsbCapabilities {
   final bool list;
 
   /// [PrinterUsbManager.requestPrinter] opens the browser's USB chooser (WebUSB).
-  /// True in Chromium browsers on macOS, ChromeOS and Linux. False on Windows,
+  /// True in Chromium browsers on macOS, ChromeOS, Linux and Android. False on Windows,
   /// where the system's own USB printer driver keeps WebUSB from opening
   /// printers, so the bridge is used instead.
   final bool chooser;
 
-  /// Printing can go through the Local TCP bridge. True on the web only.
+  /// Printing can go through the Local TCP bridge. True in desktop browsers only.
   final bool bridge;
 
   /// Printers installed in the operating system are listed too (Windows apps,

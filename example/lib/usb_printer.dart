@@ -3,7 +3,9 @@ import 'package:flutter_esc_pos_usb_universal/flutter_esc_pos_usb_universal.dart
 
 /// Test tickets, the same as the network package's example.
 class UsbPrinterTickets {
-  static Future<List<int>> testTicket(ThermalPosPrinterPageSize paperSize) async {
+  static Future<List<int>> testTicket(
+    ThermalPosPrinterPageSize paperSize,
+  ) async {
     final profile = await CapabilityProfile.load();
     final generator = Generator(paperSize.toPaperSize, profile);
     List<int> bytes = [];
@@ -16,14 +18,23 @@ class UsbPrinterTickets {
       styles: const PosStyles(codeTable: 'CP1252'),
     );
     bytes += generator.text('Bold text', styles: const PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: const PosStyles(reverse: true));
+    bytes += generator.text(
+      'Reverse text',
+      styles: const PosStyles(reverse: true),
+    );
     bytes += generator.text(
       'Underlined text',
       styles: const PosStyles(underline: true),
       linesAfter: 1,
     );
-    bytes += generator.text('Align left', styles: const PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center', styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.text(
+      'Align left',
+      styles: const PosStyles(align: PosAlign.left),
+    );
+    bytes += generator.text(
+      'Align center',
+      styles: const PosStyles(align: PosAlign.center),
+    );
     bytes += generator.text(
       'Align right',
       styles: const PosStyles(align: PosAlign.right),
@@ -48,7 +59,10 @@ class UsbPrinterTickets {
     ]);
     bytes += generator.text(
       'Text size 200%',
-      styles: const PosStyles(height: PosTextSize.size2, width: PosTextSize.size2),
+      styles: const PosStyles(
+        height: PosTextSize.size2,
+        width: PosTextSize.size2,
+      ),
     );
     bytes += generator.barcode(Barcode.upcA([1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 4]));
     bytes += generator.feed(2);
@@ -94,7 +108,10 @@ class TestReceiptWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text('TOTAL', style: style.copyWith(fontWeight: FontWeight.bold)),
+                child: Text(
+                  'TOTAL',
+                  style: style.copyWith(fontWeight: FontWeight.bold),
+                ),
               ),
               Text('7.00', style: style.copyWith(fontWeight: FontWeight.bold)),
             ],

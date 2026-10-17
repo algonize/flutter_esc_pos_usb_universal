@@ -1,7 +1,7 @@
 name: flutter_esc_pos_usb_universal
 description: >-
-  Print receipts on ESC/POS thermal USB printers from Windows, macOS, Linux and
-  Flutter Web, with one API. No printer driver needed.
+  Print receipts on ESC/POS thermal USB printers from Android, Windows, macOS,
+  Linux and Flutter Web, with one API. No printer driver needed.
 version: 1.0.0
 homepage: https://github.com/algonize/flutter_esc_pos_usb_universal
 repository: https://github.com/algonize/flutter_esc_pos_usb_universal
@@ -31,12 +31,20 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-# Pure Dart: the desktop platforms are reached through dart:ffi (Windows
-# SetupAPI and spooler, macOS IOKit, Linux libc) and the web through
-# dart:js_interop, so there is no native code to build. This list tells
-# pub.dev which platforms the package supports.
+# The desktop platforms are reached through dart:ffi (Windows SetupAPI and
+# spooler, macOS IOKit, Linux libc) and the web through dart:js_interop.
+# Android's USB host API is Java-only, so Android has a small Kotlin part.
+# This list tells pub.dev which platforms the package supports.
 platforms:
+  android:
   linux:
   macos:
   web:
   windows:
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.algoramming.flutter_esc_pos_usb_universal
+        pluginClass: FlutterEscPosUsbUniversalPlugin

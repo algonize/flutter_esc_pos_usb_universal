@@ -70,7 +70,8 @@ class _HomePageState extends State<HomePage> {
     final width = printer.paperWidthMm;
     if (width == 58 && _paperSize != ThermalPosPrinterPageSize.size58mm) {
       _setPaperSize(ThermalPosPrinterPageSize.size58mm);
-    } else if (width == 80 && _paperSize == ThermalPosPrinterPageSize.size58mm) {
+    } else if (width == 80 &&
+        _paperSize == ThermalPosPrinterPageSize.size58mm) {
       _setPaperSize(ThermalPosPrinterPageSize.size80mm);
     }
     setState(() {});
@@ -131,7 +132,11 @@ class _HomePageState extends State<HomePage> {
             Card(
               color: note.isWarning ? Colors.amber.shade50 : null,
               child: ListTile(
-                leading: Icon(note.isWarning ? Icons.warning_amber_rounded : Icons.info_outline),
+                leading: Icon(
+                  note.isWarning
+                      ? Icons.warning_amber_rounded
+                      : Icons.info_outline,
+                ),
                 title: SelectableText(note.message),
                 subtitle: Text(note.code),
               ),
@@ -169,7 +174,9 @@ class _HomePageState extends State<HomePage> {
                     value: p.id,
                     title: Text(p.displayName),
                     subtitle: Text(_describe(p)),
-                    secondary: Icon(p.isReceiptPrinter ? Icons.receipt_long : Icons.print),
+                    secondary: Icon(
+                      p.isReceiptPrinter ? Icons.receipt_long : Icons.print,
+                    ),
                   ),
               ],
             ),
@@ -185,7 +192,8 @@ class _HomePageState extends State<HomePage> {
                     ButtonSegment(value: size, label: Text(size.title)),
                 ],
                 selected: {_paperSize},
-                onSelectionChanged: (s) => setState(() => _setPaperSize(s.single)),
+                onSelectionChanged: (s) =>
+                    setState(() => _setPaperSize(s.single)),
               ),
             ],
           ),
@@ -210,17 +218,24 @@ class _HomePageState extends State<HomePage> {
                 onPressed: _busy || selected == null
                     ? null
                     : () => _print(
-                        () async =>
-                            _manager.printTicket(await UsbPrinterTickets.testTicket(_paperSize)),
+                        () async => _manager.printTicket(
+                          await UsbPrinterTickets.testTicket(_paperSize),
+                        ),
                       ),
                 icon: const Icon(Icons.text_fields),
                 label: const Text('Print text ticket'),
               ),
             ],
           ),
-          if (_status != null) ...[const SizedBox(height: 16), SelectableText(_status!)],
+          if (_status != null) ...[
+            const SizedBox(height: 16),
+            SelectableText(_status!),
+          ],
           const SizedBox(height: 24),
-          Text('Capabilities: $caps', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'Capabilities: $caps',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
@@ -231,7 +246,8 @@ class _HomePageState extends State<HomePage> {
       switch (p.route) {
         UsbPrinterRoute.windowsQueue => 'Installed Windows printer',
         UsbPrinterRoute.webUsb => 'WebUSB',
-        UsbPrinterRoute.bridge => p.isQueue ? 'Installed printer (bridge)' : 'USB (bridge)',
+        UsbPrinterRoute.bridge =>
+          p.isQueue ? 'Installed printer (bridge)' : 'USB (bridge)',
         _ => 'USB',
       },
       if (p.commandSet != null) p.commandSet!,
@@ -239,7 +255,8 @@ class _HomePageState extends State<HomePage> {
       if (p.vendorId != null && p.productId != null)
         '${p.vendorId!.toRadixString(16).padLeft(4, '0')}:'
             '${p.productId!.toRadixString(16).padLeft(4, '0')}',
-      if (p.queueStatus != null && p.queueStatus != UsbQueueStatus.ready) p.queueStatus!.name,
+      if (p.queueStatus != null && p.queueStatus != UsbQueueStatus.ready)
+        p.queueStatus!.name,
       if (p.isBusy) 'in use',
       if (!p.isAccessible) 'needs permission',
     ];

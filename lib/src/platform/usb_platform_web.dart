@@ -22,6 +22,8 @@ import 'usb_platform.dart';
 /// - Windows and Linux: the system's own printer driver holds USB printers, so
 ///   WebUSB can't open them; the Local TCP bridge prints instead, and lists
 ///   the printers without a chooser.
+/// - Android: WebUSB too (Android has no printer driver either). There is no
+///   bridge on Android.
 /// The bridge is used on macOS too when it is installed. Firefox and Safari
 /// have no WebUSB and need the bridge.
 class WebUsbPlatform implements UsbPlatform {
@@ -35,14 +37,22 @@ class WebUsbPlatform implements UsbPlatform {
   bool get _hasWebUsb => navigatorUsb != null;
 
   /// Whether WebUSB can open printers here. Windows' usbprint.sys refuses it.
-  bool get _webUsbWorks => _hasWebUsb && _os != BrowserOs.windows && _os != BrowserOs.android;
+  bool get _webUsbWorks => _hasWebUsb && _os != BrowserOs.windows;
+
+  /// The Local TCP extension is desktop-only.
+  bool get _bridgePossible => _os != BrowserOs.android;
 
   /// Whether this system needs the bridge for USB printers.
-  bool get _needsBridge => _os == BrowserOs.windows || _os == BrowserOs.linux || !_hasWebUsb;
+  bool get _needsBridge =>
+      _bridgePossible && (_os == BrowserOs.windows || _os == BrowserOs.linux || !_hasWebUsb);
 
   @override
-  UsbCapabilities get capabilities =>
-      UsbCapabilities(list: true, chooser: _webUsbWorks, bridge: true, queues: true);
+  UsbCapabilities get capabilities => UsbCapabilities(
+    list: true,
+    chooser: _webUsbWorks,
+    bridge: _bridgePossible,
+    queues: _bridgePossible,
+  );
 
   @override
   Future<UsbBridgeInfo> checkBridge() => _bridge.check();
@@ -50,13 +60,16 @@ class WebUsbPlatform implements UsbPlatform {
   @override
   Future<UsbPrinterListing> listPrinters({required bool includeVirtual}) async {
     final notes = <UsbPrinterNote>[];
-    final info = await _bridge.check();
+    // No bridge on Android: don't wait for an extension that can't answer.
+    final info = _bridgePossible
+        ? await _bridge.check()
+        : const UsbBridgeInfo(status: UsbBridgeStatus.notInstalled);
     var bridged = const <UsbPrinter>[];
     if (info.isReady) {
       final listed = await _bridge.list(includeVirtual: includeVirtual);
       bridged = listed.printers;
       notes.addAll(listed.notes);
-    } else if (_needsBridge || info.status == UsbBridgeStatus.outdated) {
+    } else if (_needsBridge || (_bridgePossible && info.status == UsbBridgeStatus.outdated)) {
       notes.add(bridgeNote(info.status));
     }
 
@@ -69,11 +82,12 @@ class WebUsbPlatform implements UsbPlatform {
       }
     } else if (!_hasWebUsb && !info.isReady) {
       notes.add(
-        const UsbPrinterNote(
+        UsbPrinterNote(
           code: 'webUsbUnavailable',
-          message:
-              'This browser cannot reach USB printers. Use Chrome or Edge, or install the '
-              'Local TCP extension.',
+          message: _bridgePossible
+              ? 'This browser cannot reach USB printers. Use Chrome or Edge, or install the '
+                    'Local TCP extension.'
+              : 'This browser cannot reach USB printers. Use Chrome, or the Android app.',
         ),
       );
     } else if (_os == BrowserOs.windows && !info.isReady) {

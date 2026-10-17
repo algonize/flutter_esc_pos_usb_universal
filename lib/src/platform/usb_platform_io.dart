@@ -6,24 +6,26 @@ import '../models/usb_capabilities.dart';
 import '../models/usb_printer.dart';
 import '../models/usb_printer_note.dart';
 import '../models/usb_write_options.dart';
+import '../transport/io/android_usb.dart';
 import '../transport/io/linux_usb.dart';
 import '../transport/io/macos_usb.dart';
 import '../transport/io/windows_usb.dart';
 import '../transport/printer_transport.dart';
 import 'usb_platform.dart';
 
-/// Windows, macOS and Linux apps: USB printers straight through the system's
-/// own USB printer support, no driver needed. Android and iOS are not
-/// supported.
+/// Windows, macOS, Linux and Android apps: USB printers straight through the
+/// system's own USB support, no driver needed. iOS does not let apps use USB
+/// printers (only MFi accessories), so it is not supported.
 class IoUsbPlatform implements UsbPlatform {
   IoUsbPlatform._();
 
   static final IoUsbPlatform instance = IoUsbPlatform._();
 
-  bool get _desktop => Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+  bool get _supported =>
+      Platform.isWindows || Platform.isMacOS || Platform.isLinux || Platform.isAndroid;
 
   @override
-  UsbCapabilities get capabilities => _desktop
+  UsbCapabilities get capabilities => _supported
       ? UsbCapabilities(list: true, chooser: false, bridge: false, queues: Platform.isWindows)
       : UsbCapabilities.none;
 
@@ -41,12 +43,18 @@ class IoUsbPlatform implements UsbPlatform {
       final result = LinuxUsbLister().list();
       return (printers: result.printers, notes: result.notes);
     }
+    if (Platform.isAndroid) {
+      final result = await listAndroidUsbPrinters();
+      return (printers: result.printers, notes: result.notes);
+    }
     return (
       printers: const <UsbPrinter>[],
       notes: const [
         UsbPrinterNote(
           code: 'unsupported',
-          message: 'USB printing works on Windows, macOS, Linux and in Chromium browsers.',
+          message:
+              'USB printing works on Android, Windows, macOS, Linux and in Chromium browsers. '
+              'iOS does not let apps use USB printers.',
         ),
       ],
     );
@@ -65,6 +73,7 @@ class IoUsbPlatform implements UsbPlatform {
       UsbPrinterRoute.windowsDevice || UsbPrinterRoute.windowsQueue => Platform.isWindows,
       UsbPrinterRoute.macosDevice => Platform.isMacOS,
       UsbPrinterRoute.linuxDevice => Platform.isLinux,
+      UsbPrinterRoute.androidDevice => Platform.isAndroid,
       _ => false,
     };
     if (!here) {
@@ -79,6 +88,7 @@ class IoUsbPlatform implements UsbPlatform {
       UsbPrinterRoute.windowsDevice => WindowsDeviceTransport(printer, options),
       UsbPrinterRoute.windowsQueue => WindowsQueueTransport(printer, options),
       UsbPrinterRoute.macosDevice => MacUsbTransport(printer, options),
+      UsbPrinterRoute.androidDevice => AndroidUsbTransport(printer, options),
       _ => LinuxUsbTransport(printer, options),
     };
   }

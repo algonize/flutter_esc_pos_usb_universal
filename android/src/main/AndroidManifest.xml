@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- USB printers need USB host mode (USB OTG). Not required, so the app
+         still installs on devices without it; they just list no USB printers. -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+</manifest>

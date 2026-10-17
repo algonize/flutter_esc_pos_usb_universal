@@ -1,9 +1,9 @@
 # Flutter ESC/POS USB Universal
 
 [![pub package](https://img.shields.io/pub/v/flutter_esc_pos_usb_universal.svg)](https://pub.dev/packages/flutter_esc_pos_usb_universal)
-[![platform](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux%20%7C%20web-blue.svg)](https://pub.dev/packages/flutter_esc_pos_usb_universal)
+[![platform](https://img.shields.io/badge/platform-android%20%7C%20windows%20%7C%20macos%20%7C%20linux%20%7C%20web-blue.svg)](https://pub.dev/packages/flutter_esc_pos_usb_universal)
 
-Print receipts on ESC/POS thermal **USB** printers from **Windows, macOS, Linux and Flutter Web**, with one API, and **no printer driver**.
+Print receipts on ESC/POS thermal **USB** printers from **Android, Windows, macOS, Linux and Flutter Web**, with one API, and **no printer driver**.
 
 It is the USB companion of [`flutter_esc_pos_network_universal`](https://pub.dev/packages/flutter_esc_pos_network_universal) (Wi‑Fi / Ethernet) and [`flutter_esc_pos_bluetooth_universal`](https://pub.dev/packages/flutter_esc_pos_bluetooth_universal) (Bluetooth): the same `connect` / `printTicket` / `printWidget` / `disconnect` surface, the same `PosPrintResult` values, and the same receipt dots.
 
@@ -12,7 +12,7 @@ It is the USB companion of [`flutter_esc_pos_network_universal`](https://pub.dev
 ## ✨ Features
 
 - **No driver.** Reaches USB printer‑class printers (most 58/80 mm receipt printers) through the operating system's own USB printer support.
-- **Pure Dart.** Desktop platforms are reached through `dart:ffi` (Windows SetupAPI and spooler, macOS IOKit, Linux libc) and the web through `dart:js_interop`. Nothing native to build.
+- **Mostly pure Dart.** Desktop platforms are reached through `dart:ffi` (Windows SetupAPI and spooler, macOS IOKit, Linux libc) and the web through `dart:js_interop`. Only Android has a small Kotlin part, as its USB host API is Java-only.
 - **Discovery.** `listPrinters()` finds connected printers, receipt printers first, with their make, model and command set from the printer's own IEEE 1284 Device ID.
 - **Widget printing.** `printWidget` renders any Flutter widget and prints it as an image, the same dots as the network and Bluetooth packages.
 - **Raw ESC/POS.** `printTicket` sends bytes built with the re‑exported `flutter_esc_pos_utils` (`Generator`, `PaperSize`, `CapabilityProfile`, …).
@@ -29,10 +29,11 @@ It is the USB companion of [`flutter_esc_pos_network_universal`](https://pub.dev
 | **Windows app** | Straight to the device through Windows' built‑in "USB Printing Support" (`usbprint.sys`); or an installed Windows printer through the spooler (RAW / XPS_PASS) | None |
 | **macOS app** | Straight to the device through IOKit | Sandboxed apps: add the `com.apple.security.device.usb` entitlement |
 | **Linux app** | Straight to `/dev/usb/lp*` (the kernel's `usblp` driver) | The user needs write access: the `lp` group or a udev rule |
-| **Chrome / Edge on macOS, ChromeOS** | WebUSB | The user picks the printer once in the browser's chooser |
+| **Android app** | Straight to the device through Android's USB host API | A USB OTG cable; the user allows the app once per printer |
+| **Chrome / Edge on macOS, ChromeOS, Android** | WebUSB | The user picks the printer once in the browser's chooser |
 | **Chrome / Edge on Windows, Linux** | The [Local TCP](https://chromewebstore.google.com/detail/local-tcp/ngbakchodnmhndnghhejmocfadjfekkf) extension and bridge (v2.1.2+) | Install the extension and run its installer once |
 | Firefox, Safari | The Local TCP bridge, if installed (no WebUSB) | As above |
-| Android, iOS | Not supported | — |
+| iOS, iPadOS | Not supported: iOS lets apps use only MFi‑certified accessories | — |
 
 Why the bridge on Windows and Linux browsers: those systems give USB printers to their own printer drivers, and Chrome's WebUSB can't open a device that a driver holds. The Local TCP bridge's native host writes to the printer the way an app would.
 
@@ -80,9 +81,32 @@ SUBSYSTEM=="usbmisc", KERNEL=="lp[0-9]*", TAG+="uaccess"
 
 `listPrinters()` reports printers it can't write to with `isAccessible == false` and a `permissionDenied` note.
 
+### Android
+
+USB printers need a phone or tablet with USB host (OTG) support and an OTG cable or adapter. Android asks once per printer whether the app may use it; the package asks when it first connects (`connect()` or the first print), so nothing is needed in the app.
+
+Optionally, let Android offer to open your app when a printer is plugged in. With "Always open", Android also keeps the permission for that printer. In `android/app/src/main/AndroidManifest.xml`, inside the main `<activity>`:
+
+```xml
+<intent-filter>
+    <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+</intent-filter>
+<meta-data
+    android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+    android:resource="@xml/usb_printer_filter" />
+```
+
+and `android/app/src/main/res/xml/usb_printer_filter.xml`:
+
+```xml
+<resources>
+    <usb-device class="7" />
+</resources>
+```
+
 ### Web
 
-- **macOS / ChromeOS:** nothing to install. Call `requestPrinter()` from a button tap to open the browser's USB chooser. The page must be served over HTTPS (or `localhost`).
+- **macOS / ChromeOS / Android:** nothing to install. Call `requestPrinter()` from a button tap to open the browser's USB chooser. The page must be served over HTTPS (or `localhost`).
 - **Windows / Linux:** the user installs the [Local TCP extension](https://chromewebstore.google.com/detail/local-tcp/ngbakchodnmhndnghhejmocfadjfekkf) and runs the one‑click installer it offers (the same bridge `flutter_esc_pos_network_universal` uses on the web). Check it with `checkBridge()`.
 
 ---
@@ -192,6 +216,7 @@ PrinterUsbManager  (public API)
    │                → spooler StartDocPrinter RAW / XPS_PASS            (win-queue:…)
    │        macOS    → IOKit IOUSBInterfaceInterface, bulk OUT pipe     (mac-usb:…)
    │        Linux    → /dev/usb/lpN, non-blocking write + poll          (linux-usb:…)
+   │        Android  → UsbManager + bulkTransfer (Kotlin, method channel) (android-usb:…)
    └── web: WebUSB   → navigator.usb, claimInterface + transferOut      (webusb:…)
             bridge   → window.postMessage ⇄ Local TCP USB_LIST/USB_PRINT (bridge:…)
 ```
@@ -205,6 +230,8 @@ Blocking writes run in a background isolate on the desktop, so the UI never free
 | Symptom | Fix |
 |---|---|
 | macOS: `permissionDenied` | Add `com.apple.security.device.usb` to both entitlements files. |
+| Android: `permissionDenied` | The user chose "Deny" in Android's dialog; print again and choose "Allow". |
+| Android: no printer listed | Check the OTG cable/adapter and that the device supports USB host. |
 | macOS: printer not listed | On Apple‑silicon Macs, allow the accessory when macOS asks the first time it is plugged in. |
 | Linux: `permissionDenied` | `sudo usermod -aG lp $USER`, then log out and back in (or the udev rule above). |
 | Linux: no printer, `usblpMissing` note | `sudo modprobe usblp`. |
